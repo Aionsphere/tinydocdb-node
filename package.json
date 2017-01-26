@@ -1,0 +1,20 @@
+{
+  "name": "tinydocdb-node",
+  "version": "0.0.1",
+  "description": "tinydocdb-node is a Node.js DocumentDB client which uses the DocumentDB REST APIs",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MicrosoftTE/tinydocdb-node.git"
+  },
+  "author": "Steven Lindsay <slindsay@microsoft.com> (https://microsoftte.github.io)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MicrosoftTE/tinydocdb-node/issues"
+  },
+  "engines": {
+    "node": ">=4.2.4"
+  },
+  "homepage": "https://github.com/MicrosoftTE/tinydocdb-node#readme",
+  "devDependencies": {}
+}
