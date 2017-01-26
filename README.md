@@ -10,34 +10,36 @@ Using it in these scenarios can not only simply DocumentDB access but it can als
 
 ## Installation
 
-`npm install @MicrosoftTE/tinydocdb-node`
-	
+`npm install tinydocdb-node`
+
+	NOTE: To use in an Azure Mobile App, go to the App Service Editor and use the development console to install
+		  To use in an Azure function, use Kudu to get to the console to install
+
 ## Usage
 
-    var tinydocdb = require('@microsoftte/tinydocdb-node');
-
+    var tinydocdb = require('tinydocdb-node');
 	var mykey = 'YOUR DOCUMENT DB KEY';
 	
 	// Gets all databases, the forth parameter is the jsonBody which should always be empty for GET
-    var allDatabases = tinydocdb('https://{databaseaccount}.documents.azure.com/dbs/', mykey, 'GET', '');
+	tinydocdb('https://{databaseaccount}.documents.azure.com/dbs/', mykey, 'GET', '', function(result) { console.log(result); } );
 	
 	// Create a database
-	var createDBResult =  tinydocdb('https://{databaseaccount}.documents.azure.com/dbs/', mykey, 'POST', '{ "id" : "tempdb" }');
+	tinydocdb('https://{databaseaccount}.documents.azure.com/dbs/', mykey, 'POST', '{ "id" : "tempdb" }', function(result) { console.log(result); });
 
 	// Create a collection
-	var createCollectionResult =  tinydocdb('https://{databaseaccount}.documents.azure.com/dbs/tempdb/colls', mykey, 'POST', '{ "id" : "tempcoll" }');
+	tinydocdb('https://{databaseaccount}.documents.azure.com/dbs/tempdb/colls', mykey, 'POST', '{ "id" : "tempcoll" }', function(result) { console.log(result); });
 
 	// Create a document
-	var createDocumentResult =  tinydocdb('https://{databaseaccount}.documents.azure.com/dbs/tempdb/colls/tempcoll/docs', mykey, 'POST', '{ "id" : "tempdoc", "tempdata" : "data!" }');
+	tinydocdb('https://{databaseaccount}.documents.azure.com/dbs/tempdb/colls/tempcoll/docs', mykey, 'POST', '{ "id" : "tempdoc", "tempdata" : "data!" }', function(result) { console.log(result); });
 	
 	// Get a document
-	var getDocumentResult = tinydocdb('https://{databaseaccount}.documents.azure.com/dbs/tempdb/colls/tempcoll/docs/tempdoc', mykey, 'GET', '');
+	tinydocdb('https://{databaseaccount}.documents.azure.com/dbs/tempdb/colls/tempcoll/docs/tempdoc', mykey, 'GET', '', function(result) { console.log(result); });
 
 	// Update a document
-	var updateDocumentResult = tinydocdb('https://{databaseaccount}.documents.azure.com/dbs/tempdb/colls/tempcoll/docs/tempdoc', mykey, 'PUT', '{ "id" : "tempdoc", "tempdata" : "updated data!" }');
+	tinydocdb('https://{databaseaccount}.documents.azure.com/dbs/tempdb/colls/tempcoll/docs/tempdoc', mykey, 'PUT', '{ "id" : "tempdoc", "tempdata" : "updated data!" }', function(result) { console.log(result); });
 
 	// Delete a document
-	var deleteDocumentResult = tinydocdb('https://{databaseaccount}.documents.azure.com/dbs/tempdb/colls/tempcoll/docs/tempdoc', mykey, 'DEL', '');
+	tinydocdb('https://{databaseaccount}.documents.azure.com/dbs/tempdb/colls/tempcoll/docs/tempdoc', mykey, 'DEL', '', function(result) { console.log(result); });
 
 These are just examples of what you can do, you can access all of the resources available through the REST interface in this way by simply changing the URI.
 
