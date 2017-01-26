@@ -4,7 +4,7 @@
 // license : MIT
 
 /**
- * Expose `tinydocdb(documentDBUri, sharedkey, verb, jsonBody)`.
+ * Expose `tinydocdb(documentDBUri, mastKey, verb, jsonBody)`.
  */
 module.exports = tinydocdb;
 
@@ -19,27 +19,27 @@ module.exports = tinydocdb;
  *    jsonResponse : the JSON response body returned from the DocumentDB call.
  * 
  *  @param {string} documentDBUri
- *  @param {string} sharedkey
+ *  @param {string} mastKey
  *  @param {string} verb
  *  @param {string} jsonBody
  *  @return {object}
  */
-function tinydocdb(documentDBUri, sharedkey, verb, jsonBody) {
+function tinydocdb(documentDBUri, mastKey, verb, jsonBody, fn) {
     
     // Verify we received a valid verb and return an error if we didn't
     var verifyVerbResult = verifyVerb(verb);
     if (verifyVerbResult.statusCode != 0) {
         return { statusCode : verifyVerbResult.statusCode, errorDescription : verifyVerbResult.errorDescription, jsonResponse : "{}"};
     }
-
+    
     // Verify we received a valid URI and get the url parts in an object, return an error if we didn't have a valid URI
     var urlParts = verifyAndReturnURLParts(documentDBUri);
     if (urlParts.statusCode != 0) {
         return { statusCode : urlParts.statusCode, errorDescription : urlParts.errorDescription, jsonResponse : "{}"};
     }
-
+    
     // Verify we have a valid resource path and return an object containing the resource type and id, return an error if parsing failed
-    var resourceInfo = getResourceInfo(path);
+    var resourceInfo = getResourceInfo(urlParts.path + urlParts.file);
     if (resourceInfo.statusCode != 0) {
         return { statusCode : resourceInfo.statusCode, errorDescription : resourceInfo.errorDescription, jsonResponse : "{}" };
     }
@@ -50,6 +50,7 @@ function tinydocdb(documentDBUri, sharedkey, verb, jsonBody) {
     var date = generateRFC1123Date();
     var requesttext = (verb || "").toLowerCase() + "\n" + (resourceInfo.resourceType || "").toLowerCase() + "\n" + 
         (resourceInfo.resourceId || "") + "\n" + (date || "").toLowerCase() + "\n" + "" + "\n";
+
     var signature = crypto.createHmac("sha256", key);
     signature.update(requesttext);
     var base64Bits = signature.digest("base64"); 
@@ -63,34 +64,35 @@ function tinydocdb(documentDBUri, sharedkey, verb, jsonBody) {
     var http = require("https");
     var options = {
         "method": verb,
-        "hostname": UrlParts.host,
-        "port": UrlParts.port,
-        "path": UrlParts.path + UrlParts.file,
+        "hostname": urlParts.host,
+        "port": urlParts.port,
+        "path": urlParts.path + urlParts.file,
         "headers": {
             "accept": "application/json",
             "x-ms-version": "2015-12-16",
             "authorization": authToken,
-            "x-ms-date": UTCtime,
+            "x-ms-date": date,
             "cache-control": "no-cache"
         }
     };
-        
+
     // Make our request and return the result
     var req = http.request(options, function (res) {
+        console.log(req);
         var chunks = [];
         res.on("data", function (chunk) {
             chunks.push(chunk);
         });
         res.on("end", function () {
             var body = Buffer.concat(chunks);
-            return { 
-                statusCode : 0, 
-                errorDescription : "", 
-                jsonResponse : body 
-            };
-            // response.status(200).type('application/json').send(body);
+            return fn(body);
+        });
+        res.on("error", function () {
+            console.error(e);
         });
     });
+
+    req.end();
 }
 
 /**
@@ -113,12 +115,12 @@ function tinydocdb(documentDBUri, sharedkey, verb, jsonBody) {
  *  @param {string} url
  *  @return {object}
  */
-function verifyAndReturnURLParts(url)
+function verifyAndReturnURLParts(inputuri)
 {
     var errorText = "";
     var statusCode = 0;
     var PROTOCOL = 2, HOST = 3, PORT = 5, PATH = 6, FILE = 8, QUERYSTRING = 9, HASH = 12;
-    var re = new RegExp("^((https):\/)?\/?([^:\/\s]+)(:([^\/]*))?((\/\w+)*\/)([\w\-\.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$", "i");
+    var re = /^((https):\/)?\/?([^:\/\s]+)(:([^\/]*))?((\/\w+)*\/)([\w\-\.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/i;
     var match = re.exec(inputuri);
     return { 
         statusCode : statusCode, 
@@ -187,10 +189,10 @@ function verifyVerb(verb)
  * @param {string} path 
  * @return {object}
  */
-function getResourceInfo(path) {
+function getResourceInfo(resourcepath) {
     // push the parts down into an array so we can determine if the call is on a specific item
     // or if it is on a resource (odd will mean a resource, even will mean an item)
-    var strippedparts = strippedpath.split("/");
+    var strippedparts = resourcepath.split("/");
     var truestrippedcount = (strippedparts.length - 1);
     var resType = "";
     var resId = "";
